@@ -23,6 +23,7 @@ export default class Home extends Component {
       text = text
         .toString("utf8")
         .replace(/WARNING[\s\S]+?(\n\n|$)/g, str => `<span class="wp-warning">${str}</span>`)
+        .replace(/ERROR[\s\S]+?(\n\n|$)/g, str => `<span class="wp-error">${str}</span>`)
         .replace(/\[emitted\]/g, str => `<span class="wp-success">${str}</span>`)
         .replace(
           /\{(.+)\}\s*\[built\]/g,
@@ -59,7 +60,14 @@ export default class Home extends Component {
           <pre
             dangerouslySetInnerHTML={{ __html: this.state.output }}
             ref={el => (this.outputEl = el)}
-            style={{ overflow: "scroll", display: "block", height: "500px", width: "800px", paddingBottom: "10px" }}
+            style={{
+              overflow: "scroll",
+              display: "block",
+              height: "500px",
+              width: "800px",
+              paddingBottom: "25px",
+              backgroundColor: "black"
+            }}
           />
           {null && <div dangerouslySetInnerHTML={{ __html: this.state.output }} />}
         </div>

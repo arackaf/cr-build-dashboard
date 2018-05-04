@@ -42,6 +42,7 @@ a:hover {
   cursor: pointer;
 }
 
+.wp-error { color: #F00; font-weight: bold; }
 .wp-warning { color: #FF0 }
 .wp-success { color: #0F0 }
 .wp-build-id { color: #FF0 }
