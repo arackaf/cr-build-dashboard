@@ -41,3 +41,8 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
+.wp-warning { color: #FF0 }
+.wp-success { color: #0F0 }
+.wp-build-id { color: #FF0 }
+.wp-stat { color: #C0C0C0 }

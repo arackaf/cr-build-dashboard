@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import styles from "./Home.css";
 //import { spawn, exec } from "child_process";
 const spawn = require("cross-spawn");
-const Convert = require("ansi-to-html");
-const convert = new Convert();
+
 //debugger;
 
 export default class Home extends Component {
@@ -18,19 +17,29 @@ export default class Home extends Component {
     this.wp = wp;
     wp.on("error", (a, b, c) => {
       debugger;
+      debugger;
     });
     wp.stdout.on("data", (text, b, c) => {
-      debugger;
-
-      let X = text.toString("utf8");
+      text = text
+        .toString("utf8")
+        .replace(/WARNING[\s\S]+?(\n\n|$)/g, str => `<span class="wp-warning">${str}</span>`)
+        .replace(/\[emitted\]/g, str => `<span class="wp-success">${str}</span>`)
+        .replace(
+          /\{(.+)\}\s*\[built\]/g,
+          (str, name) => `<span class="wp-stat">{<span class="wp-build-id">${name}</span>}</span> <span class="wp-success">[built]</span>`
+        )
+        .replace(/\d+(\.\d+)?\s+(KiB|bytes|MiB)/gi, str => `<span class="wp-stat">${str}</span>`)
+        .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`);
 
       if (this.unmounted) {
         this.cleanup();
         return;
       }
       let old = this.state.output;
-      let output = old + (old ? "" : "") + convert.toHtml(X);
-      this.setState({ output });
+      let output = old + text;
+      this.setState({ output }, () => {
+        this.outputEl.scrollTop = this.outputEl.scrollHeight;
+      });
     });
   }
   componentWillUnmount() {
@@ -47,7 +56,11 @@ export default class Home extends Component {
       <div>
         <div>
           <h2>Hello World 2</h2>
-          <pre>{this.state.output}</pre>
+          <pre
+            dangerouslySetInnerHTML={{ __html: this.state.output }}
+            ref={el => (this.outputEl = el)}
+            style={{ overflow: "scroll", display: "block", height: "500px", width: "800px", paddingBottom: "10px" }}
+          />
           {null && <div dangerouslySetInnerHTML={{ __html: this.state.output }} />}
         </div>
       </div>
