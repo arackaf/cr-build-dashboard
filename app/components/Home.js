@@ -1,17 +1,13 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
 import styles from "./Home.css";
-//import { spawn, exec } from "child_process";
+
 const spawn = require("cross-spawn");
 
-//debugger;
+import Counter from "./Counter";
 
 export default class Home extends Component {
   state = { output: "" };
   componentDidMount() {
-    //return;
-    //debugger;
-
     //let wp = exec("npm.cmd run start-wp", { cwd: "c:/git/MainLine/members" });
     let wp = spawn("npm.cmd", ["run", "start-wp"], { cwd: "c:/git/MainLine/members" });
     this.wp = wp;
@@ -56,7 +52,7 @@ export default class Home extends Component {
     return (
       <div>
         <div>
-          <h2>Hello World 2</h2>
+          <button className={styles.btn}>Hello</button>
           <pre
             dangerouslySetInnerHTML={{ __html: this.state.output }}
             ref={el => (this.outputEl = el)}
@@ -69,7 +65,7 @@ export default class Home extends Component {
               backgroundColor: "black"
             }}
           />
-          {null && <div dangerouslySetInnerHTML={{ __html: this.state.output }} />}
+          <button className={styles.btn}>Hello</button>
         </div>
       </div>
     );
