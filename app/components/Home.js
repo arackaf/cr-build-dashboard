@@ -52,7 +52,12 @@ export default class Home extends Component {
     return (
       <div>
         <div>
-          <button className={styles.btn}>Hello</button>
+          <button className={styles.btn}>
+            <i className="fas fa-ban" />
+          </button>
+          <button className={styles.btn}>
+            <i className="far fa-sync" />
+          </button>
           <pre
             dangerouslySetInnerHTML={{ __html: this.state.output }}
             ref={el => (this.outputEl = el)}
@@ -62,10 +67,10 @@ export default class Home extends Component {
               height: "500px",
               width: "800px",
               paddingBottom: "25px",
-              backgroundColor: "black"
+              backgroundColor: "black",
+              marginTop: 0
             }}
           />
-          <button className={styles.btn}>Hello</button>
         </div>
       </div>
     );
