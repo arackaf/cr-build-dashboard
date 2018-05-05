@@ -2,9 +2,6 @@ import React, { Component } from "react";
 import styles from "./Home.css";
 
 const spawn = require("cross-spawn");
-
-import Counter from "./Counter";
-
 const cliStyles = {
   overflow: "scroll",
   backgroundColor: "black",
@@ -13,17 +10,12 @@ const cliStyles = {
   width: "100%"
 };
 
-export default class Home extends Component {
+class Webpack extends Component {
   state = { output: "" };
   componentDidMount() {
-    return;
-    localStorage.setItem("A", 12);
-
-    //let wp = exec("npm.cmd run start-wp", { cwd: "c:/git/MainLine/members" });
     let wp = spawn("npm.cmd", ["run", "start-wp"], { cwd: "c:/git/MainLine/members" });
     this.wp = wp;
     wp.on("error", (a, b, c) => {
-      debugger;
       debugger;
     });
     wp.stdout.on("data", (text, b, c) => {
@@ -51,7 +43,6 @@ export default class Home extends Component {
     });
   }
   componentWillUnmount() {
-    return;
     this.cleanup();
   }
   cleanup() {
@@ -61,31 +52,30 @@ export default class Home extends Component {
     } catch (er) {}
   }
   render() {
-    let X = (
-      <div className={styles.container}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1 }}>
-            <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
-            Hello
-          </div>
+    let { style, ...rest } = this.props;
+    return (
+      <div style={{ ...style }} {...rest}>
+        <div style={{}}>
+          <button className={styles.btn}>
+            <i className="fas fa-ban" />
+          </button>
+          <button className={styles.btn}>
+            <i className="far fa-sync" />
+          </button>
         </div>
+        <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
       </div>
     );
+  }
+}
 
+export default class Home extends Component {
+  state = { output: "" };
+  render() {
     return (
       <div>
         <div className={styles.container} style={{ display: "flex" }}>
-          <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2 }}>
-            <div style={{}}>
-              <button className={styles.btn}>
-                <i className="fas fa-ban" />
-              </button>
-              <button className={styles.btn}>
-                <i className="far fa-sync" />
-              </button>
-            </div>
-            <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
-          </div>
+          <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2 }} />
           <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 1 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
               <div style={{}}>
