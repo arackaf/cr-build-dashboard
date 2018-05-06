@@ -13,20 +13,20 @@ const cliStyles = {
   width: "100%"
 };
 
-class Webpack extends Component {
-  state = { output: "" };
+class CliProcess extends Component {
   componentDidMount() {
+    this.startup();
     process.on("exit", () => {
       this.cleanup();
     });
-    let wp = spawn("node_modules/webpack/bin/webpack.js", ["-w"], {
-      cwd: "c:/git/MainLine/members",
-      env: process.env,
-      stdio: [null, null, null, null]
+  }
+  startup() {
+    let { command, args } = this.props;
+    let wp = spawn(command, args, {
+      cwd: "c:/git/MainLine/members"
     });
     this.wp = wp;
-    wp.on("error", (a, b, c) => {
-      debugger;
+    wp.on("error", error => {
       if (this.unmounted) {
         this.cleanup();
         return;
@@ -37,28 +37,17 @@ class Webpack extends Component {
         this.cleanup();
         return;
       }
-      text = text
-        .toString("utf8")
-        .replace(/WARNING[\s\S]+?(\n\n|$)/g, str => `<span class="wp-warning">${str}</span>`)
-        .replace(/ERROR[\s\S]+?(\n\n|$)/g, str => `<span class="wp-error">${str}</span>`)
-        .replace(/\[emitted\]/g, str => `<span class="wp-success">${str}</span>`)
-        .replace(
-          /\{(.+)\}\s*\[built\]/g,
-          (str, name) => `<span class="wp-stat">{<span class="wp-build-id">${name}</span>}</span> <span class="wp-success">[built]</span>`
-        )
-        .replace(/\d+(\.\d+)?\s+(KiB|bytes|MiB)/gi, str => `<span class="wp-stat">${str}</span>`)
-        .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`);
-
-      let old = this.state.output;
-      let output = old + text;
-      this.setState({ output }, () => {
-        this.outputEl.scrollTop = this.outputEl.scrollHeight;
-      });
+      this.props.onData(text);
     });
   }
   componentWillUnmount() {
     this.unmounted = true;
     this.cleanup();
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.output != prevProps.output) {
+      this.outputEl.scrollTop = this.outputEl.scrollHeight;
+    }
   }
   cleanup() {
     try {
@@ -66,6 +55,31 @@ class Webpack extends Component {
     } catch (er) {}
     this.wp = null;
   }
+  render() {
+    let { style = {}, output, onData, ...rest } = this.props;
+    return <pre dangerouslySetInnerHTML={{ __html: output }} ref={el => (this.outputEl = el)} style={{ ...cliStyles, ...style }} {...rest} />;
+  }
+}
+
+class Webpack extends Component {
+  state = { output: "" };
+  onData = text => {
+    text = text
+      .toString("utf8")
+      .replace(/WARNING[\s\S]+?(\n\n|$)/g, str => `<span class="wp-warning">${str}</span>`)
+      .replace(/ERROR[\s\S]+?(\n\n|$)/g, str => `<span class="wp-error">${str}</span>`)
+      .replace(/\[emitted\]/g, str => `<span class="wp-success">${str}</span>`)
+      .replace(
+        /\{(.+)\}\s*\[built\]/g,
+        (str, name) => `<span class="wp-stat">{<span class="wp-build-id">${name}</span>}</span> <span class="wp-success">[built]</span>`
+      )
+      .replace(/\d+(\.\d+)?\s+(KiB|bytes|MiB)/gi, str => `<span class="wp-stat">${str}</span>`)
+      .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`);
+
+    let old = this.state.output;
+    let output = old + text;
+    this.setState({ output });
+  };
   render() {
     let { style, ...rest } = this.props;
     return (
@@ -78,7 +92,7 @@ class Webpack extends Component {
             <i className="far fa-sync" />
           </button>
         </div>
-        <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
+        <CliProcess command="node_modules/webpack/bin/webpack.js" args={["-w"]} onData={this.onData} output={this.state.output} />
       </div>
     );
   }
@@ -86,46 +100,14 @@ class Webpack extends Component {
 
 class TS extends Component {
   state = { output: "", a: 13 };
-  componentDidMount() {
-    process.on("exit", () => {
-      this.cleanup();
-    });
-    let wp = spawn("node_modules/typescript/bin/tsc", ["-w", "-p", "tsconfig.json", "--noEmit", "true", "--pretty", "true"], {
-      cwd: "c:/git/MainLine/members",
-      env: process.env,
-      stdio: [null, null, null, null]
-    });
-    this.wp = wp;
-    wp.on("error", (a, b, c) => {
-      if (this.unmounted) {
-        this.cleanup();
-      }
-    });
-    wp.stdout.on("data", (text, b, c) => {
-      if (this.unmounted) {
-        this.cleanup();
-        return;
-      }
-      text = convert.toHtml(text.toString("utf8")).replace(/^c\[(.*)/, (str, content) => `[${content}`);
-      if (text == "c") return;
+  onData = text => {
+    text = convert.toHtml(text.toString("utf8")).replace(/^c\[(.*)/, (str, content) => `[${content}`);
+    if (text == "c") return;
 
-      let old = this.state.output;
-      let output = old + text;
-      this.setState({ output }, () => {
-        this.outputEl.scrollTop = this.outputEl.scrollHeight;
-      });
-    });
-  }
-  componentWillUnmount() {
-    this.unmounted = true;
-    this.cleanup();
-  }
-  cleanup() {
-    try {
-      process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
-    } catch (er) {}
-    this.wp = null;
-  }
+    let old = this.state.output;
+    let output = old + text;
+    this.setState({ output });
+  };
   render() {
     let { style, ...rest } = this.props;
     return (
@@ -138,7 +120,12 @@ class TS extends Component {
             <i className="far fa-sync" />
           </button>
         </div>
-        <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
+        <CliProcess
+          command="node_modules/typescript/bin/tsc"
+          args={["-w", "-p", "tsconfig.json", "--noEmit", "true", "--pretty", "true"]}
+          onData={this.onData}
+          output={this.state.output}
+        />
       </div>
     );
   }
