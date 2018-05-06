@@ -19,8 +19,16 @@ class Webpack extends Component {
     this.wp = wp;
     wp.on("error", (a, b, c) => {
       debugger;
+      if (this.unmounted) {
+        this.cleanup();
+        return;
+      }
     });
     wp.stdout.on("data", (text, b, c) => {
+      if (this.unmounted) {
+        this.cleanup();
+        return;
+      }
       text = text
         .toString("utf8")
         .replace(/WARNING[\s\S]+?(\n\n|$)/g, str => `<span class="wp-warning">${str}</span>`)
@@ -33,10 +41,6 @@ class Webpack extends Component {
         .replace(/\d+(\.\d+)?\s+(KiB|bytes|MiB)/gi, str => `<span class="wp-stat">${str}</span>`)
         .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`);
 
-      if (this.unmounted) {
-        this.cleanup();
-        return;
-      }
       let old = this.state.output;
       let output = old + text;
       this.setState({ output }, () => {
@@ -45,12 +49,13 @@ class Webpack extends Component {
     });
   }
   componentWillUnmount() {
+    this.unmounted = true;
     this.cleanup();
   }
   cleanup() {
-    this.unmounted = true;
     try {
       this.wp.kill();
+      this.wp = null;
     } catch (er) {}
   }
   render() {
@@ -72,26 +77,24 @@ class Webpack extends Component {
 }
 
 class TS extends Component {
-  state = { output: "" };
+  state = { output: "", a: 12 };
   componentDidMount() {
     let wp = spawn("npm.cmd", ["run", "tscw"], { cwd: "c:/git/MainLine/members" });
     this.wp = wp;
     wp.on("error", (a, b, c) => {
+      if (this.unmounted) {
+        this.cleanup();
+      }
       debugger;
     });
-    debugger;
     wp.stdout.on("data", (text, b, c) => {
-      debugger;
-      let X = text.toString("utf8");
-      let Y = convert.toHtml(text.toString("utf8"));
-
-      debugger;
-      text = convert.toHtml(text.toString("utf8"));
-
       if (this.unmounted) {
         this.cleanup();
         return;
       }
+      text = convert.toHtml(text.toString("utf8")).replace(/^c\[(.*)/, (str, content) => `[${content}`);
+      if (text == "c") return;
+
       let old = this.state.output;
       let output = old + text;
       this.setState({ output }, () => {
@@ -100,12 +103,13 @@ class TS extends Component {
     });
   }
   componentWillUnmount() {
+    this.unmounted = true;
     this.cleanup();
   }
   cleanup() {
-    this.unmounted = true;
     try {
       this.wp.kill();
+      this.wp = null;
     } catch (er) {}
   }
   render() {
@@ -133,7 +137,7 @@ export default class Home extends Component {
       <div>
         <div className={styles.container} style={{ display: "flex", overflow: "hidden" }}>
           <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2 }} />
-          <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 1, overflow: "hidden" }}>
             <TS style={{ flex: 1, display: "flex", flexDirection: "column" }} />
             <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
               <div style={{}}>
