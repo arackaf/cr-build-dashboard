@@ -1,9 +1,5 @@
 import React, { Component } from "react";
 import styles from "./Home.css";
-const kill = require("tree-kill");
-const terminate = require("terminate");
-
-import { exec } from "child_process";
 import Convert from "ansi-to-html";
 const convert = new Convert();
 
@@ -66,31 +62,6 @@ class Webpack extends Component {
   }
   cleanup() {
     try {
-      terminate(this.wp.pid);
-    } catch (er) {}
-    try {
-      exec("taskkill /pid " + this.wp.pid + " /T /F");
-    } catch (er) {}
-    try {
-      kill(this.wp.pid, "SIGKILL");
-    } catch (er) {}
-    try {
-      kill(this.wp.pid);
-    } catch (er) {}
-    return;
-    try {
-      this.wp.removeAllListeners();
-    } catch (er) {}
-    try {
-      this.wp.disconnect();
-    } catch (er) {}
-    try {
-      this.wp.unref();
-    } catch (err) {}
-    try {
-      this.wp.kill("SIGINT");
-    } catch (er) {}
-    try {
       process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
     } catch (er) {}
     this.wp = null;
@@ -150,32 +121,6 @@ class TS extends Component {
     this.cleanup();
   }
   cleanup() {
-    try {
-      terminate(this.wp.pid);
-    } catch (er) {}
-    try {
-      exec("taskkill /pid " + this.wp.pid + " /T /F");
-    } catch (er) {}
-    try {
-      kill(this.wp.pid, "SIGKILL");
-    } catch (er) {}
-    try {
-      kill(this.wp.pid);
-    } catch (er) {}
-    return;
-
-    try {
-      this.wp.removeAllListeners();
-    } catch (er) {}
-    try {
-      this.wp.disconnect();
-    } catch (er) {}
-    try {
-      this.wp.unref();
-    } catch (err) {}
-    try {
-      this.wp.kill("SIGINT");
-    } catch (er) {}
     try {
       process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
     } catch (er) {}
