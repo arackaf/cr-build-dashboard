@@ -1,9 +1,14 @@
 import React, { Component } from "react";
 import styles from "./Home.css";
+const kill = require("tree-kill");
+const terminate = require("terminate");
+
+import { exec } from "child_process";
 import Convert from "ansi-to-html";
 const convert = new Convert();
 
 const spawn = require("cross-spawn");
+
 const cliStyles = {
   overflow: "scroll",
   backgroundColor: "black",
@@ -15,7 +20,14 @@ const cliStyles = {
 class Webpack extends Component {
   state = { output: "" };
   componentDidMount() {
-    let wp = spawn("npm.cmd", ["run", "start-wp"], { cwd: "c:/git/MainLine/members" });
+    process.on("exit", () => {
+      this.cleanup();
+    });
+    let wp = spawn("node_modules/webpack/bin/webpack.js", ["-w"], {
+      cwd: "c:/git/MainLine/members",
+      env: process.env,
+      stdio: [null, null, null, null]
+    });
     this.wp = wp;
     wp.on("error", (a, b, c) => {
       debugger;
@@ -54,9 +66,34 @@ class Webpack extends Component {
   }
   cleanup() {
     try {
-      this.wp.kill();
-      this.wp = null;
+      terminate(this.wp.pid);
     } catch (er) {}
+    try {
+      exec("taskkill /pid " + this.wp.pid + " /T /F");
+    } catch (er) {}
+    try {
+      kill(this.wp.pid, "SIGKILL");
+    } catch (er) {}
+    try {
+      kill(this.wp.pid);
+    } catch (er) {}
+    return;
+    try {
+      this.wp.removeAllListeners();
+    } catch (er) {}
+    try {
+      this.wp.disconnect();
+    } catch (er) {}
+    try {
+      this.wp.unref();
+    } catch (err) {}
+    try {
+      this.wp.kill("SIGINT");
+    } catch (er) {}
+    try {
+      process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
+    } catch (er) {}
+    this.wp = null;
   }
   render() {
     let { style, ...rest } = this.props;
@@ -77,15 +114,21 @@ class Webpack extends Component {
 }
 
 class TS extends Component {
-  state = { output: "", a: 12 };
+  state = { output: "", a: 13 };
   componentDidMount() {
-    let wp = spawn("npm.cmd", ["run", "tscw"], { cwd: "c:/git/MainLine/members" });
+    process.on("exit", () => {
+      this.cleanup();
+    });
+    let wp = spawn("node_modules/typescript/bin/tsc", ["-w", "-p", "tsconfig.json", "--noEmit", "true", "--pretty", "true"], {
+      cwd: "c:/git/MainLine/members",
+      env: process.env,
+      stdio: [null, null, null, null]
+    });
     this.wp = wp;
     wp.on("error", (a, b, c) => {
       if (this.unmounted) {
         this.cleanup();
       }
-      debugger;
     });
     wp.stdout.on("data", (text, b, c) => {
       if (this.unmounted) {
@@ -108,9 +151,35 @@ class TS extends Component {
   }
   cleanup() {
     try {
-      this.wp.kill();
-      this.wp = null;
+      terminate(this.wp.pid);
     } catch (er) {}
+    try {
+      exec("taskkill /pid " + this.wp.pid + " /T /F");
+    } catch (er) {}
+    try {
+      kill(this.wp.pid, "SIGKILL");
+    } catch (er) {}
+    try {
+      kill(this.wp.pid);
+    } catch (er) {}
+    return;
+
+    try {
+      this.wp.removeAllListeners();
+    } catch (er) {}
+    try {
+      this.wp.disconnect();
+    } catch (er) {}
+    try {
+      this.wp.unref();
+    } catch (err) {}
+    try {
+      this.wp.kill("SIGINT");
+    } catch (er) {}
+    try {
+      process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
+    } catch (er) {}
+    this.wp = null;
   }
   render() {
     let { style, ...rest } = this.props;
