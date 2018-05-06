@@ -26,10 +26,14 @@ class CliProcess extends Component {
       cwd: "c:/git/MainLine/members"
     });
     this.wp = wp;
-    wp.on("error", error => {
+    wp.stderr.on("data", error => {
+      debugger;
       if (this.unmounted) {
         this.cleanup();
         return;
+      }
+      if (this.props.onError) {
+        this.props.onError(error);
       }
     });
     wp.stdout.on("data", (text, b, c) => {
@@ -131,6 +135,47 @@ class TS extends Component {
   }
 }
 
+class TSLint extends Component {
+  state = { output: "", a: 13 };
+  onError = text => {
+    let old = this.state.output;
+    let output = old + text;
+    this.setState({ output });
+  };
+  onData = text => {
+    this.setState({ output: text });
+    text = convert.toHtml(text.toString("utf8")).replace(/^c\[(.*)/, (str, content) => `[${content}`);
+    if (text == "c") return;
+
+    let old = this.state.output;
+    let output = old + text;
+    this.setState({ output });
+  };
+  render() {
+    let { style, ...rest } = this.props;
+    return (
+      <div style={{ ...style, overflow: "hidden" }} {...rest}>
+        <div style={{}}>
+          <button className={styles.btn}>
+            <i className="fas fa-ban" />
+          </button>
+          <button className={styles.btn}>
+            <i className="far fa-sync" />
+          </button>
+        </div>
+        {/*<CliProcess
+          command="node_modules/tslint/bin/tslint"
+          args={["tslint", "-p", "."]}
+          onData={this.onData}
+          onError={this.onError}
+          output={this.state.output}
+        />*/}
+        <CliProcess command="npm.cmd" args={["run", "tslint"]} onData={this.onData} onError={this.onError} output={this.state.output} />
+      </div>
+    );
+  }
+}
+
 export default class Home extends Component {
   state = { output: "" };
   render() {
@@ -140,17 +185,7 @@ export default class Home extends Component {
           <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2 }} />
           <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 1, overflow: "hidden" }}>
             <TS style={{ flex: 1, display: "flex", flexDirection: "column" }} />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <div style={{}}>
-                <button className={styles.btn}>
-                  <i className="fas fa-ban" />
-                </button>
-                <button className={styles.btn}>
-                  <i className="far fa-sync" />
-                </button>
-              </div>
-              <pre dangerouslySetInnerHTML={{ __html: this.state.output }} ref={el => (this.outputEl = el)} style={cliStyles} />
-            </div>
+            <TSLint style={{ flex: 1, display: "flex", flexDirection: "column" }} />
           </div>
         </div>
       </div>
