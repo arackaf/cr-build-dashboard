@@ -76,7 +76,20 @@ class CliProcess extends Component {
 }
 
 class Webpack extends Component {
-  state = { output: "" };
+  state = { output: "", lastUpdate: null, lastUpdateDisplay: "" };
+  componentDidMount() {
+    setInterval(() => {
+      this.setState({ lastUpdateDisplay: this.calculateLastUpdateDisplay(this.state.lastUpdate) });
+    }, 5000);
+  }
+  calculateLastUpdateDisplay(lastUpdate) {
+    if (lastUpdate) {
+      let delta = ~~((new Date() - lastUpdate) / 1000);
+      return `Last updated: ${delta} seconds ago`;
+    } else {
+      return ``;
+    }
+  }
   onData = text => {
     text = text
       .toString("utf8")
@@ -92,10 +105,12 @@ class Webpack extends Component {
 
     let old = this.state.output;
     let output = old + text;
-    this.setState({ output });
+    let lastUpdate = /Webpack is watching the files/g.test(text) ? null : +new Date();
+    this.setState({ output, lastUpdate, lastUpdateDisplay: this.calculateLastUpdateDisplay(lastUpdate) });
   };
   render() {
     let { style, ...rest } = this.props;
+    let { lastUpdateDisplay } = this.state;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
@@ -105,6 +120,7 @@ class Webpack extends Component {
           <button className={styles.btn}>
             <i className="far fa-sync" />
           </button>
+          <span>{lastUpdateDisplay}</span>
         </div>
         <CliProcess
           ref={c => (this.cli = c)}
@@ -221,7 +237,11 @@ class Menu extends Component {
             </label>
           </div>
         ))}
-        <button className={styles.btn} onClick={() => saveModules(modules.filter(m => this["modCb" + m].checked))}>
+        <button
+          className={styles.btn}
+          style={{ backgroundColor: "blue", color: "white" }}
+          onClick={() => saveModules(modules.filter(m => this["modCb" + m].checked))}
+        >
           Save
         </button>
       </div>
