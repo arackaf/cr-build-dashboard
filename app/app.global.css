@@ -63,3 +63,24 @@ pre::-webkit-scrollbar-thumb
 {
 	background-color: gray;	
 }
+
+.menu {
+  display: none;
+  position: fixed;
+  top: 5px;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border: 1px solid white;
+  z-index: 100;
+  background-color: white;
+  color: black;
+  padding-top: 5px;
+  padding-left: 5px;
+}
+  
+.menu.active {
+  width: 300px;
+  transition: width 3s ease-in-out;
+  display: block;
+}
