@@ -101,7 +101,13 @@ class Webpack extends Component {
         (str, name) => `<span class="wp-stat">{<span class="wp-build-id">${name}</span>}</span> <span class="wp-success">[built]</span>`
       )
       .replace(/\d+(\.\d+)?\s+(KiB|bytes|MiB)/gi, str => `<span class="wp-stat">${str}</span>`)
-      .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`);
+      .replace(/\s+([a-zA-Z0-9\.\-\~]*\.js)/gi, (str, file) => str.replace(file, `<span class="wp-success">${file}</span>`))
+      .replace(
+        /(Entrypoint)\s+(\S+)\s+=/gi,
+        (str, entrypoint, name) => `<span class="wp-stat">Entrypoint</span> ${name} <span class="wp-stat">=</span>`
+      )
+      .replace(/\+\s+\d+ hidden modules/gi, str => `<span class="wp-stat">${str}</span>`)
+      .replace(/\[\d+\s+\warnings?\]/gi, str => `<span class="wp-warning">${str}</span>`);
 
     let old = this.state.output;
     let output = old + text;
