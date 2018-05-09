@@ -114,16 +114,23 @@ class Webpack extends Component {
     let lastUpdate = /Webpack is watching the files/g.test(text) ? null : +new Date();
     this.setState({ output, lastUpdate, lastUpdateDisplay: this.calculateLastUpdateDisplay(lastUpdate) });
   };
+  clear = () => {
+    this.setState({ output: "" });
+  };
+  restart = () => {
+    this.clear();
+    this.cli.restart();
+  };
   render() {
     let { style, ...rest } = this.props;
     let { lastUpdateDisplay } = this.state;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
-          <button className={styles.btn}>
+          <button onClick={this.clear} className={styles.btn}>
             <i className="fas fa-ban" />
           </button>
-          <button className={styles.btn}>
+          <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
           <span>{lastUpdateDisplay}</span>
@@ -153,19 +160,27 @@ class TS extends Component {
     let output = old + text;
     this.setState({ output });
   };
+  clear = () => {
+    this.setState({ output: "" });
+  };
+  restart = () => {
+    this.clear();
+    this.cli.restart();
+  };
   render() {
     let { style, ...rest } = this.props;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
-          <button className={styles.btn}>
+          <button onClick={this.clear} className={styles.btn}>
             <i className="fas fa-ban" />
           </button>
-          <button className={styles.btn}>
+          <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
         </div>
         <CliProcess
+          ref={c => (this.cli = c)}
           command="node_modules/typescript/bin/tsc"
           args={["-w", "-p", "tsconfig.json", "--noEmit", "true", "--pretty", "true"]}
           onData={this.onData}
