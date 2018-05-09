@@ -256,23 +256,27 @@ class Menu extends Component {
 }
 
 export default class Home extends Component {
-  state = { menuOpen: false, modulesMap: {} };
+  state = { menuOpen: false, modulesMap: {}, ready: false };
   menuClose = () => this.setState({ menuOpen: false });
   componentDidMount() {
     if (!store.get("webpackModules")) {
       store.set("webpackModules", { contacts: true });
+      this.saveModules(["contacts"]);
+    } else {
+      this.setState({ modulesMap: store.get("webpackModules"), ready: true });
     }
-    this.setState({ modulesMap: store.get("webpackModules") });
     window.onkeydown = this.keyDown;
   }
   saveModules = toSave => {
     let wp = spawn("node", ["createWebpackRouter.js", toSave.join(",")], {
       cwd: PATH + "/build"
     });
-    let newMap = toSave.reduce((hash, k) => ((hash[k] = true), hash), {});
-    store.set("webpackModules", newMap);
-    this.setState({ modulesMap: newMap });
-    this.menuClose();
+    wp.on("exit", () => {
+      let newMap = toSave.reduce((hash, k) => ((hash[k] = true), hash), {});
+      store.set("webpackModules", newMap);
+      this.setState({ modulesMap: newMap, ready: true });
+      this.menuClose();
+    });
   };
 
   keyDown = evt => {
@@ -281,7 +285,11 @@ export default class Home extends Component {
     }
   };
   render() {
-    let { modulesMap, menuOpen } = this.state;
+    let { modulesMap, menuOpen, ready } = this.state;
+
+    if (!ready) {
+      return null;
+    }
     return (
       <div>
         {this.state.menuOpen ? <Menu modulesMap={modulesMap} onClose={this.menuClose} saveModules={this.saveModules} isOpen={menuOpen} /> : null}
