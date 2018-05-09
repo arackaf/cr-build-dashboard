@@ -77,18 +77,26 @@ class CliProcess extends Component {
 
 class Webpack extends Component {
   state = { output: "", lastUpdate: null, lastUpdateDisplay: "" };
-  componentDidMount() {
-    setInterval(() => {
-      this.setState({ lastUpdateDisplay: this.calculateLastUpdateDisplay(this.state.lastUpdate) });
-    }, 5000);
-  }
   calculateLastUpdateDisplay(lastUpdate) {
-    if (lastUpdate) {
-      let delta = ~~((new Date() - lastUpdate) / 1000);
-      return `Last updated: ${delta} seconds ago`;
-    } else {
+    clearTimeout(this.timeoutValue);
+    if (!lastUpdate) {
       return ``;
     }
+
+    let delta = ~~((new Date() - lastUpdate) / 1000);
+    this.timeoutValue = setTimeout(() => {
+      let newDisplay = this.calculateLastUpdateDisplay(this.state.lastUpdate);
+      this.setState({ lastUpdateDisplay: newDisplay });
+    }, delta < 60 ? 5000 : 1000 * 60);
+
+    if (delta < 2) {
+      return `<span class="wp-success">Just now <i class="far fa-check"></i></span>`;
+    }
+    if (delta >= 60) {
+      let minutes = ~~(delta / 60);
+      return `Last updated: ${minutes} minute${minutes == 1 ? "" : "s"} ago`;
+    }
+    return `Last updated: ${delta} seconds ago`;
   }
   onData = text => {
     text = text
@@ -115,7 +123,7 @@ class Webpack extends Component {
     this.setState({ output, lastUpdate, lastUpdateDisplay: this.calculateLastUpdateDisplay(lastUpdate) });
   };
   clear = () => {
-    this.setState({ output: "" });
+    this.setState({ output: "", lastUpdateDisplay: "", lastUpdate: null });
   };
   restart = () => {
     this.clear();
@@ -133,7 +141,8 @@ class Webpack extends Component {
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
-          <span>{lastUpdateDisplay}</span>
+          &nbsp; &nbsp;
+          <span dangerouslySetInnerHTML={{ __html: lastUpdateDisplay }} />
         </div>
         <CliProcess
           ref={c => (this.cli = c)}
