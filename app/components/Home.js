@@ -285,13 +285,15 @@ export default class Home extends Component {
   componentDidMount() {
     if (!store.get("webpackModules")) {
       store.set("webpackModules", { contacts: true });
-      this.saveModules(["contacts"]);
+      this.createAndSyncModules(["contacts"]);
     } else {
-      this.setState({ modulesMap: store.get("webpackModules"), ready: true });
+      this.setState({ ready: true });
+      let currentMap = store.get("webpackModules");
+      this.createAndSyncModules(Object.keys(currentMap).filter(k => currentMap[k]));
     }
     window.onkeydown = this.keyDown;
   }
-  saveModules = toSave => {
+  createAndSyncModules = toSave => {
     let wp = spawn("node", ["createWebpackRouter.js", toSave.join(",")], {
       cwd: PATH + "/build"
     });
@@ -316,7 +318,9 @@ export default class Home extends Component {
     }
     return (
       <div>
-        {this.state.menuOpen ? <Menu modulesMap={modulesMap} onClose={this.menuClose} saveModules={this.saveModules} isOpen={menuOpen} /> : null}
+        {this.state.menuOpen ? (
+          <Menu modulesMap={modulesMap} onClose={this.menuClose} saveModules={this.createAndSyncModules} isOpen={menuOpen} />
+        ) : null}
         <div className={styles.container} style={{ display: "flex", overflow: "hidden", zIndex: 50 }}>
           <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 3 }} />
           <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2, overflow: "hidden" }}>
