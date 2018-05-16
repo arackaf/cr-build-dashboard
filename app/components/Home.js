@@ -340,7 +340,7 @@ export default class Home extends Component {
 
   keyDown = evt => {
     if (evt.keyCode == 83) {
-      this.setState({ menuOpen: true });
+      this.setState({ menuOpen: !this.state.menuOpen });
     }
   };
   render() {
