@@ -15,7 +15,7 @@ const cliStyles = {
   width: "100%"
 };
 
-const PATH = "c:/git/MainLine/members";
+var PATH = "";
 
 class CliProcess extends Component {
   componentDidMount() {
@@ -252,7 +252,7 @@ const modules = [
 
 class Menu extends Component {
   render() {
-    let { isOpen, onClose, modulesMap, saveModules } = this.props;
+    let { isOpen, onClose, modulesMap, saveModules, savePath, hasPath, path } = this.props;
     return (
       <div className={"menu" + (isOpen ? " active" : "")}>
         <a onClick={onClose} style={{ color: "black" }}>
@@ -260,38 +260,71 @@ class Menu extends Component {
         </a>
         <br />
         <br />
-        {modules.map(m => (
-          <div key={m}>
-            <label>
-              <input ref={el => (this["modCb" + m] = el)} type="checkbox" defaultChecked={!!modulesMap[m]} /> {m}
-            </label>
-          </div>
-        ))}
-        <button
-          className={styles.btn}
-          style={{ backgroundColor: "blue", color: "white" }}
-          onClick={() => saveModules(modules.filter(m => this["modCb" + m].checked))}
-        >
-          Save
+        <input defaultValue={path} ref={el => (this.pathEl = el)} />
+        <br />
+        <button className={styles.btn} style={{ backgroundColor: "blue", color: "white" }} onClick={() => savePath(this.pathEl.value)}>
+          Save path
         </button>
+        <br />
+        <br />
+        {hasPath ? (
+          <div>
+            {modules.map(m => (
+              <div key={m}>
+                <label>
+                  <input ref={el => (this["modCb" + m] = el)} type="checkbox" defaultChecked={!!modulesMap[m]} /> {m}
+                </label>
+              </div>
+            ))}
+            <button
+              className={styles.btn}
+              style={{ backgroundColor: "blue", color: "white" }}
+              onClick={() => saveModules(modules.filter(m => this["modCb" + m].checked))}
+            >
+              Save
+            </button>
+          </div>
+        ) : null}
       </div>
     );
   }
 }
 
+//RACKIS: c:/git/MainLine/members
+
 export default class Home extends Component {
-  state = { menuOpen: false, modulesMap: {}, ready: false };
+  state = { menuOpen: false, modulesMap: {}, modulesBuilt: false, hasPath: false, path: "" };
   menuClose = () => this.setState({ menuOpen: false });
   componentDidMount() {
+    if (!store.get("path")) {
+      this.setState({ menuOpen: true });
+    } else {
+      this.savePath(store.get("path"));
+      this.syncModulesState();
+    }
+
+    window.onkeydown = this.keyDown;
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.path != this.state.path && this.state.path) {
+      this.syncModulesState();
+    }
+  }
+  savePath = path => {
+    if (!path) return;
+    store.set("path", path);
+    PATH = path;
+    this.setState({ path, hasPath: true });
+  };
+  syncModulesState() {
     if (!store.get("webpackModules")) {
       store.set("webpackModules", { contacts: true });
       this.createAndSyncModules(["contacts"]);
     } else {
-      this.setState({ ready: true });
+      this.setState({ modulesBuilt: true });
       let currentMap = store.get("webpackModules");
       this.createAndSyncModules(Object.keys(currentMap).filter(k => currentMap[k]));
     }
-    window.onkeydown = this.keyDown;
   }
   createAndSyncModules = toSave => {
     let wp = spawn("node", ["createWebpackRouter.js", toSave.join(",")], {
@@ -300,7 +333,7 @@ export default class Home extends Component {
     wp.on("exit", () => {
       let newMap = toSave.reduce((hash, k) => ((hash[k] = true), hash), {});
       store.set("webpackModules", newMap);
-      this.setState({ modulesMap: newMap, ready: true });
+      this.setState({ modulesMap: newMap, modulesBuilt: true });
       this.menuClose();
     });
   };
@@ -311,16 +344,26 @@ export default class Home extends Component {
     }
   };
   render() {
-    let { modulesMap, menuOpen, ready } = this.state;
+    let { modulesMap, menuOpen, modulesBuilt, hasPath, path } = this.state;
+    let MenuComp = (
+      <Menu
+        {...{ modulesMap, hasPath, path }}
+        savePath={this.savePath}
+        onClose={this.menuClose}
+        saveModules={this.createAndSyncModules}
+        isOpen={menuOpen}
+      />
+    );
 
-    if (!ready) {
+    if (!modulesBuilt || !hasPath) {
+      if (!hasPath) {
+        return MenuComp;
+      }
       return null;
     }
     return (
       <div>
-        {this.state.menuOpen ? (
-          <Menu modulesMap={modulesMap} onClose={this.menuClose} saveModules={this.createAndSyncModules} isOpen={menuOpen} />
-        ) : null}
+        {this.state.menuOpen ? MenuComp : null}
         <div className={styles.container} style={{ display: "flex", overflow: "hidden", zIndex: 50 }}>
           <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 3 }} />
           <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2, overflow: "hidden" }}>
