@@ -339,6 +339,8 @@ export default class Home extends Component {
   };
 
   keyDown = evt => {
+    let target = evt.target;
+    if (target && /input/i.test(target.tagName) && target.type == "text") return;
     if (evt.keyCode == 83) {
       this.setState({ menuOpen: !this.state.menuOpen });
     }
