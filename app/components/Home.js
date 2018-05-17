@@ -125,6 +125,10 @@ class Webpack extends Component {
   clear = () => {
     this.setState({ output: "", lastUpdateDisplay: "", lastUpdate: null });
   };
+  stop = () => {
+    this.cli.cleanup();
+    this.setState({ output: "<br/>STOPPED" });
+  };
   restart = () => {
     this.clear();
     this.cli.restart();
@@ -140,6 +144,9 @@ class Webpack extends Component {
           </button>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
+          </button>
+          <button onClick={this.stop} className={styles.btn} style={{ marginLeft: "15px" }}>
+            <i className="far fa-stop-circle" />
           </button>
           &nbsp; &nbsp;
           <span dangerouslySetInnerHTML={{ __html: lastUpdateDisplay }} />
@@ -172,6 +179,10 @@ class TS extends Component {
   clear = () => {
     this.setState({ output: "" });
   };
+  stop = () => {
+    this.cli.cleanup();
+    this.setState({ output: "<br/>STOPPED" });
+  };
   restart = () => {
     this.clear();
     this.cli.restart();
@@ -186,6 +197,9 @@ class TS extends Component {
           </button>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
+          </button>
+          <button onClick={this.stop} className={styles.btn} style={{ marginLeft: "15px" }}>
+            <i className="far fa-stop-circle" />
           </button>
         </div>
         <CliProcess
