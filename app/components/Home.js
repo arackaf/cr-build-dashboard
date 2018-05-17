@@ -122,6 +122,11 @@ class Webpack extends Component {
     let lastUpdate = /Webpack is watching the files/g.test(text) ? null : +new Date();
     this.setState({ output, lastUpdate, lastUpdateDisplay: this.calculateLastUpdateDisplay(lastUpdate) });
   };
+  onError = text => {
+    let old = this.state.output;
+    let output = old + text;
+    this.setState({ output: `<span class="wp-error">${text}</span>` });
+  };
   clear = () => {
     this.setState({ output: "", lastUpdateDisplay: "", lastUpdate: null });
   };
@@ -156,6 +161,7 @@ class Webpack extends Component {
           command="node_modules/webpack/bin/webpack.js"
           args={["-w"]}
           onData={this.onData}
+          onError={this.onError}
           output={this.state.output}
         />
       </div>
