@@ -265,6 +265,7 @@ const modules = [
   "payroll",
   "permissions",
   "register",
+  "reporting",
   "resources",
   "scheduling",
   "tasks"
