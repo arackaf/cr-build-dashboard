@@ -37,6 +37,11 @@ class CliProcess extends Component {
       cwd: PATH
     });
     this.wp = wp;
+    wp.on("close", code => {
+      if (this.props.onClose) {
+        this.props.onClose(code);
+      }
+    });
     wp.stderr.on("data", error => {
       if (this.unmounted) {
         this.cleanup();
@@ -198,9 +203,6 @@ class TS extends Component {
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
-          <button onClick={this.clear} className={styles.btn}>
-            <i className="fas fa-ban" />
-          </button>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
@@ -227,28 +229,58 @@ class TSLint extends Component {
     let output = old + text;
     this.setState({ output });
   };
+  onClose = code => {
+    if (code == 0) {
+      this.setState({ output: "<br /><span class='lint-success' style='font-size: 14pt'>NO ERRORS</span>" });
+    }
+  };
   onData = text => {
-    this.setState({ output: text });
-    text = convert.toHtml(text.toString("utf8")).replace(/^c\[(.*)/, (str, content) => `[${content}`);
-    if (text == "c") return;
+    debugger;
+    text = text
+      .toString("utf8")
+      .replace(/(ERROR:\s*[\d|:]+)\s*(\S+)\s*(.*)/g, (str, error, rule, desc) =>
+        str
+          .replace(error, `<span class="lint-error">${error}</span>`)
+          .replace(rule, `<span class="lint-stat">${rule}</span>`)
+          .replace(desc, `<span class="lint-desc">${desc}</span>`)
+      )
+      .replace(/(WARNING:\s*[\d|:]+)\s*(\S+)\s*(.*)/g, (str, warning, rule, desc) =>
+        str
+          .replace(warning, `<span class="lint-warning">${warning}</span>`)
+          .replace(rule, `<span class="lint-stat">${rule}</span>`)
+          .replace(desc, `<span class="lint-desc">${desc}</span>`)
+      );
 
     let old = this.state.output;
     let output = old + text;
     this.setState({ output });
+  };
+  clear = () => {
+    this.setState({ output: "" });
+  };
+  restart = () => {
+    this.clear();
+    this.cli.restart();
   };
   render() {
     let { style, ...rest } = this.props;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
-          <button className={styles.btn}>
-            <i className="fas fa-ban" />
-          </button>
-          <button className={styles.btn}>
+          <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
         </div>
-        <CliProcess command="npm.cmd" args={["run", "tslint"]} onData={this.onData} onError={this.onError} output={this.state.output} lazy={true} />
+        <CliProcess
+          ref={c => (this.cli = c)}
+          command="node_modules/tslint/bin/tslint"
+          args={["-p", ".", "-t", "stylish"]}
+          onClose={this.onClose}
+          onData={this.onData}
+          onError={this.onError}
+          output={this.state.output}
+          lazy={true}
+        />
       </div>
     );
   }
