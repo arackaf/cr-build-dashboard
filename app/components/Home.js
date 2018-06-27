@@ -12,7 +12,8 @@ const cliStyles = {
   backgroundColor: "black",
   marginTop: 0,
   flex: 1,
-  width: "100%"
+  width: "100%",
+  height: "100%"
 };
 
 var PATH = "";
@@ -144,7 +145,7 @@ class Webpack extends Component {
     this.cli.restart();
   };
   render() {
-    let { style, ...rest } = this.props;
+    let { style, expanded, expand, restore, ...rest } = this.props;
     let { lastUpdateDisplay } = this.state;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
@@ -158,6 +159,16 @@ class Webpack extends Component {
           <button onClick={this.stop} className={styles.btn} style={{ marginLeft: "15px" }}>
             <i className="far fa-stop-circle" />
           </button>
+          &nbsp;&nbsp;&nbsp;
+          {expanded ? (
+            <button onClick={restore} className={styles.btn}>
+              <i className="far fa-compress" />
+            </button>
+          ) : (
+            <button onClick={expand} className={styles.btn}>
+              <i className="far fa-expand-arrows-alt" />
+            </button>
+          )}
           &nbsp; &nbsp;
           <span dangerouslySetInnerHTML={{ __html: lastUpdateDisplay }} />
         </div>
@@ -199,7 +210,7 @@ class TS extends Component {
     this.cli.restart();
   };
   render() {
-    let { style, ...rest } = this.props;
+    let { style, expanded, restore, expand, ...rest } = this.props;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
@@ -209,6 +220,16 @@ class TS extends Component {
           <button onClick={this.stop} className={styles.btn} style={{ marginLeft: "15px" }}>
             <i className="far fa-stop-circle" />
           </button>
+          &nbsp;&nbsp;&nbsp;
+          {expanded ? (
+            <button onClick={restore} className={styles.btn}>
+              <i className="far fa-compress" />
+            </button>
+          ) : (
+            <button onClick={expand} className={styles.btn}>
+              <i className="far fa-expand-arrows-alt" />
+            </button>
+          )}
         </div>
         <CliProcess
           ref={c => (this.cli = c)}
@@ -235,7 +256,6 @@ class TSLint extends Component {
     }
   };
   onData = text => {
-    debugger;
     text = text
       .toString("utf8")
       .replace(/(ERROR:\s*[\d|:]+)\s*(\S+)\s*(.*)/g, (str, error, rule, desc) =>
@@ -263,13 +283,23 @@ class TSLint extends Component {
     this.cli.restart();
   };
   render() {
-    let { style, ...rest } = this.props;
+    let { style, expanded, expand, restore, ...rest } = this.props;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
+          &nbsp;&nbsp;&nbsp;
+          {expanded ? (
+            <button onClick={restore} className={styles.btn}>
+              <i className="far fa-compress" />
+            </button>
+          ) : (
+            <button onClick={expand} className={styles.btn}>
+              <i className="far fa-expand-arrows-alt" />
+            </button>
+          )}
         </div>
         <CliProcess
           ref={c => (this.cli = c)}
@@ -346,7 +376,25 @@ class Menu extends Component {
 //RACKIS: c:/git/MainLine/members
 
 export default class Home extends Component {
-  state = { menuOpen: false, modulesMap: {}, modulesBuilt: false, hasPath: false, path: "" };
+  state = {
+    menuOpen: false,
+    modulesMap: {},
+    modulesBuilt: false,
+    hasPath: false,
+    path: "",
+    wpExpanded: false,
+    tsExpanded: false,
+    tsLintExpanded: false
+  };
+  expandWp = () => this.setState({ wpExpanded: true });
+  restoreWp = () => this.setState({ wpExpanded: false });
+
+  expandTs = () => this.setState({ tsExpanded: true });
+  restoreTs = () => this.setState({ tsExpanded: false });
+
+  expandTsLint = () => this.setState({ tsLintExpanded: true });
+  restoreTsLint = () => this.setState({ tsLintExpanded: false });
+
   menuClose = () => this.setState({ menuOpen: false });
   componentDidMount() {
     if (!store.get("path")) {
@@ -398,6 +446,7 @@ export default class Home extends Component {
       this.setState({ menuOpen: !this.state.menuOpen });
     }
   };
+  expandedStyles = { position: "fixed", top: 5, left: 5, right: 5, bottom: 5, zIndex: 500 };
   render() {
     let { modulesMap, menuOpen, modulesBuilt, hasPath, path } = this.state;
     let MenuComp = (
@@ -416,14 +465,35 @@ export default class Home extends Component {
       }
       return null;
     }
+    const { wpExpanded, tsExpanded, tsLintExpanded } = this.state;
+
     return (
       <div>
         {this.state.menuOpen ? MenuComp : null}
         <div className={styles.container} style={{ display: "flex", overflow: "hidden", zIndex: 50 }}>
-          <Webpack style={{ display: "flex", flexDirection: "column", padding: 5, flex: 3 }} />
+          <Webpack
+            expanded={wpExpanded}
+            expand={this.expandWp}
+            restore={this.restoreWp}
+            style={
+              wpExpanded
+                ? this.expandedStyles
+                : { display: tsExpanded || tsLintExpanded ? "none" : "flex", flexDirection: "column", padding: 5, flex: 3 }
+            }
+          />
           <div style={{ display: "flex", flexDirection: "column", padding: 5, flex: 2, overflow: "hidden" }}>
-            <TS style={{ flex: 1, display: "flex", flexDirection: "column" }} />
-            <TSLint style={{ flex: 1, display: "flex", flexDirection: "column" }} />
+            <TS
+              expanded={this.state.tsExpanded}
+              expand={this.expandTs}
+              restore={this.restoreTs}
+              style={tsExpanded ? this.expandedStyles : { flex: 1, display: wpExpanded || tsLintExpanded ? "none" : "flex", flexDirection: "column" }}
+            />
+            <TSLint
+              expanded={this.state.tsLintExpanded}
+              expand={this.expandTsLint}
+              restore={this.restoreTsLint}
+              style={tsLintExpanded ? this.expandedStyles : { flex: 1, display: wpExpanded || tsExpanded ? "none" : "flex", flexDirection: "column" }}
+            />
           </div>
         </div>
       </div>
