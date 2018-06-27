@@ -134,9 +134,10 @@ class Webpack extends Component {
     let old = this.state.output;
     let output = old + text;
     let lastUpdate =
-      /Webpack is watching the files/g.test(text) || /\(node:\d+\) DeprecationWarning/g.test(text) || /live reload listening/gi.test(text)
+      /Webpack is watching the files/gi.test(text) || /\(node:\d+\) DeprecationWarning/gi.test(text) || /live reload listening/gi.test(text)
         ? null
         : +new Date();
+
     this.setState({ output, lastUpdate, lastUpdateDisplay: this.calculateLastUpdateDisplay(lastUpdate) });
   };
   onError = text => {
