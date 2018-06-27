@@ -38,7 +38,9 @@ class CliProcess extends Component {
       cwd: PATH
     });
     this.wp = wp;
+
     wp.on("close", code => {
+      if (wp !== this.wp) return;
       if (this.props.onClose) {
         this.props.onClose(code);
       }
@@ -71,7 +73,9 @@ class CliProcess extends Component {
   }
   cleanup() {
     try {
-      process.kill(process.platform === "win32" ? this.wp.pid : -this.wp.pid);
+      let pid = this.wp.pid;
+      this.wp = null;
+      process.kill(process.platform === "win32" ? pid : -pid);
     } catch (er) {}
     this.wp = null;
   }
@@ -270,6 +274,10 @@ class TSLint extends Component {
     }
     this.setState({ running: false });
   };
+  stop = () => {
+    this.cli.cleanup();
+    this.setState({ output: "", running: false });
+  };
   onData = text => {
     text = text
       .toString("utf8")
@@ -310,6 +318,9 @@ class TSLint extends Component {
           </button>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
+          </button>
+          <button onClick={this.stop} className={styles.btn} style={{ marginLeft: "15px" }}>
+            <i className="far fa-stop-circle" />
           </button>
           &nbsp;&nbsp;&nbsp;
           {expanded ? (
