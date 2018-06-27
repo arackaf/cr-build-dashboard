@@ -76,8 +76,16 @@ class CliProcess extends Component {
     this.wp = null;
   }
   render() {
-    let { style = {}, output, onData, lazy, ...rest } = this.props;
-    return <pre dangerouslySetInnerHTML={{ __html: output }} ref={el => (this.outputEl = el)} style={{ ...cliStyles, ...style }} {...rest} />;
+    let { style = {}, output, onData, lazy, expanded, ...rest } = this.props;
+    let otherStyles = expanded ? { height: "95%" } : {};
+    return (
+      <pre
+        dangerouslySetInnerHTML={{ __html: output }}
+        ref={el => (this.outputEl = el)}
+        style={{ ...cliStyles, ...style, ...otherStyles }}
+        {...rest}
+      />
+    );
   }
 }
 
@@ -182,6 +190,7 @@ class Webpack extends Component {
           onData={this.onData}
           onError={this.onError}
           output={this.state.output}
+          expanded={expanded}
         />
       </div>
     );
@@ -240,6 +249,7 @@ class TS extends Component {
           args={["-w", "-p", "tsconfig.json", "--noEmit", "true", "--pretty", "true"]}
           onData={this.onData}
           output={this.state.output}
+          expanded={expanded}
         />
       </div>
     );
@@ -247,16 +257,17 @@ class TS extends Component {
 }
 
 class TSLint extends Component {
-  state = { output: "", a: 13 };
+  state = { output: "", running: false };
   onError = text => {
     let old = this.state.output;
     let output = old + text;
     this.setState({ output });
   };
   onClose = code => {
-    if (code == 0) {
-      this.setState({ output: "<br /><span class='lint-success' style='font-size: 14pt'>NO ERRORS</span>" });
+    if (code == 0 && !/WARNING/gi.test(this.currentOutput)) {
+      this.setState({ output: "<br />&nbsp;<span class='lint-success' style='font-size: 14pt'>NO ERRORS</span>" });
     }
+    this.setState({ running: false });
   };
   onData = text => {
     text = text
@@ -277,19 +288,25 @@ class TSLint extends Component {
     let old = this.state.output;
     let output = old + text;
     this.setState({ output });
+    this.currentOutput = output;
   };
   clear = () => {
+    this.currentOutput = "";
     this.setState({ output: "" });
   };
   restart = () => {
     this.clear();
     this.cli.restart();
+    this.setState({ running: true });
   };
   render() {
     let { style, expanded, expand, restore, ...rest } = this.props;
     return (
       <div style={{ ...style, overflow: "hidden" }} {...rest}>
         <div style={{}}>
+          <button onClick={this.clear} className={styles.btn}>
+            <i className="fas fa-ban" />
+          </button>
           <button onClick={this.restart} className={styles.btn}>
             <i className="far fa-sync" />
           </button>
@@ -303,6 +320,7 @@ class TSLint extends Component {
               <i className="far fa-expand-arrows-alt" />
             </button>
           )}
+          {this.state.running ? <i style={{ marginLeft: "5px" }} className="far fa-spinner fa-spin" /> : null}
         </div>
         <CliProcess
           ref={c => (this.cli = c)}
@@ -313,6 +331,7 @@ class TSLint extends Component {
           onError={this.onError}
           output={this.state.output}
           lazy={true}
+          expanded={expanded}
         />
       </div>
     );
