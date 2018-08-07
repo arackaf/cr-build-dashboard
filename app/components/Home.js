@@ -368,6 +368,9 @@ const modules = [
 ];
 
 class Menu extends Component {
+  checkAll = () => modules.forEach(m => (this["modCb" + m].checked = true));
+  checkNone = () => modules.forEach(m => (this["modCb" + m].checked = false));
+
   render() {
     let { isOpen, onClose, modulesMap, saveModules, savePath, hasPath, path } = this.props;
     return (
@@ -383,9 +386,11 @@ class Menu extends Component {
           Save path
         </button>
         <br />
-        <br />
         {hasPath ? (
           <div>
+            <button onClick={this.checkAll}>All</button>&nbsp;<button onClick={this.checkNone} style={{ marginBottom: "10px", marginTop: "10px" }}>
+              None
+            </button>
             {modules.map(m => (
               <div key={m}>
                 <label>
